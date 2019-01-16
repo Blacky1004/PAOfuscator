@@ -24,7 +24,7 @@
     <InheritWinAppVersionFrom>None</InheritWinAppVersionFrom>
     <AssemblyInfoFilePath>Properties\AssemblyInfo.cs</AssemblyInfoFilePath>
     <PrimaryVersionType>AssemblyFileVersionAttribute</PrimaryVersionType>
-    <AssemblyVersion>2019.1.16.35</AssemblyVersion>
+    <AssemblyVersion>2019.1.16.48</AssemblyVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>

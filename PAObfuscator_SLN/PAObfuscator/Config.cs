@@ -19,6 +19,9 @@ namespace PAObfuscator
 
         [JsonProperty("makepbo_path")]
         public string MakePboFolder { get; set; }
+
+        [JsonProperty("create_pbo")]
+        public bool MakePbo { get; set; }
     }
     internal class Config
     {
@@ -100,7 +103,8 @@ namespace PAObfuscator
             {
                 ExportFolder = this.ExportFolder,
                 MissionFolder = this.MissionFolder,
-                MakePboFolder = this.MakePboFolder
+                MakePboFolder = this.MakePboFolder,
+                MakePbo = this.CreatePbo
             };
 
             string cfgData = JsonConvert.SerializeObject(saveCfg);
@@ -118,5 +122,7 @@ namespace PAObfuscator
         public string CryptFolder { get; set; }
 
         public string MakePboFolder { get; set; }
+
+        public bool CreatePbo { get; set; }
     }
 }

@@ -25,8 +25,8 @@
                 <Button x:Name="btnSetMakePbo" Content="..." VerticalAlignment="Center" HorizontalAlignment="Right" Width="34" Click="FolderSelect" />
             </StackPanel>
             <Grid Margin="12,11,0,0">
-                <CheckBox x:Name="chkMakePbo" Content="in Pbo packen" VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="White" />
-                <Button x:Name="btnSavecfg" Content="Speichern" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0" Width="126" />
+                <CheckBox x:Name="chkMakePbo" IsChecked="{Binding MakePbo}" Content="in Pbo packen" VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="White" />
+                <Button x:Name="btnSavecfg" Content="Speichern" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0" Width="126" Click="btnSavecfg_Click" />
                 <Button x:Name="btnObfuscate" Content="Erstellen" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,15,0" Width="120" Click="btnObfuscate_Click" />
             </Grid>
         </StackPanel>

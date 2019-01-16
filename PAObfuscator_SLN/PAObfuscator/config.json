@@ -1,5 +1,6 @@
 ﻿{
   "mission_path": "",
   "export_path": "",
-  "makepbo_path": ""
+  "makepbo_path": "",
+  "create_pbo":  false
 }

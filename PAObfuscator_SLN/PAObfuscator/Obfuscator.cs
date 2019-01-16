@@ -25,7 +25,7 @@ namespace PAObfuscator
         {
             missionPath = arg;
             missionName = Path.GetFileName(arg);
-            obfuPath = Directory.GetParent(missionPath).FullName + "\\" + missionName + "\\Obfu";
+            obfuPath = Directory.GetParent(missionPath).FullName + "\\" + missionName + "_Obfu"; //Path.Combine(Config.Instance.ExportFolder, missionName);
             obfuName = missionName + "_Obfu";
             if (Directory.Exists(obfuPath))
                 Directory.Delete(obfuPath, true);

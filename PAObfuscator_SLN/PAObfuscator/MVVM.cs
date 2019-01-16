@@ -56,6 +56,18 @@ namespace PAObfuscator
             }
         }
 
+        private bool makePbo;
+        public bool MakePbo
+        {
+            get { return makePbo; }
+            set
+            {
+                if (Equals(value, makePbo)) return;
+                makePbo = value;
+                RaisePropertyChanged("MakePbo");
+            }
+        }
+
         #region Interfaces
         public string this[string columnName] => null;
 

@@ -31,7 +31,8 @@ namespace PAObfuscator
             var resDecFile = Encoding.UTF8.GetString(Properties.Resources.fn_deCryptFiles);
             var regex = new Regex("private _key = .*;", RegexOptions.Multiline);
             string result = regex.Replace(resDecFile, "private _key = \"" + cryptKey + "\";");
-            File.WriteAllText(decryptPath, result);
+            string decryptFile = System.IO.Path.Combine(decryptPath, "fn_deCryptFiles.sqf");
+            File.WriteAllText(decryptFile, result);
         }
 
         private List<int> toArray(string input)
