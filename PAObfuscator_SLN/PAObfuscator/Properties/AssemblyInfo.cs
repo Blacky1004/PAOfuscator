@@ -52,4 +52,4 @@ using System.Windows;
 // übernehmen, indem Sie "*" eingeben:
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("2019.1.16.22")]
+[assembly: AssemblyFileVersion("2019.1.16.35")]

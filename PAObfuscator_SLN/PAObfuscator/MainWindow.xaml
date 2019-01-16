@@ -17,14 +17,18 @@
             <StackPanel Orientation="Horizontal" Margin="10,10,10,0">
                 <TextBlock Text="Export-Verzeichnis:" VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="White" Margin="0,0,7,0" />
                 <TextBox Text="{Binding ExportFolder}" Controls:TextBoxHelper.Watermark="C:\" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="9,0,7,0" Width="610" />
-                <Button x:Name="btnSetExport" Content="..." VerticalAlignment="Center" HorizontalAlignment="Right" Width="34" />
+                <Button x:Name="btnSetExport" Content="..." VerticalAlignment="Center" HorizontalAlignment="Right" Width="34" Click="FolderSelect" />
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="10,10,10,0">
                 <TextBlock Text="MakePbo-Verzeichnis:" VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="White" Margin="0,0,3,0" />
                 <TextBox Text="{Binding MakePboFolder}" Controls:TextBoxHelper.Watermark="C:\" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="9,0,7,0" Width="598" />
-                <Button x:Name="btnSetMakePbo" Content="..." VerticalAlignment="Center" HorizontalAlignment="Right" Width="34" />
+                <Button x:Name="btnSetMakePbo" Content="..." VerticalAlignment="Center" HorizontalAlignment="Right" Width="34" Click="FolderSelect" />
             </StackPanel>
-            <Button x:Name="btnObfuscate" Content="Erstellen" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,11,15,0" Width="120" Click="btnObfuscate_Click" />
+            <Grid Margin="12,11,0,0">
+                <CheckBox x:Name="chkMakePbo" Content="in Pbo packen" VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="White" />
+                <Button x:Name="btnSavecfg" Content="Speichern" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0" Width="126" />
+                <Button x:Name="btnObfuscate" Content="Erstellen" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,15,0" Width="120" Click="btnObfuscate_Click" />
+            </Grid>
         </StackPanel>
         <StatusBar DockPanel.Dock="Bottom" Height="30">
             <StatusBarItem>Version:</StatusBarItem>

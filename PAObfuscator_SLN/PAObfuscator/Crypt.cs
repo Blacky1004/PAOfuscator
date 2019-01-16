@@ -21,15 +21,16 @@ namespace PAObfuscator
             cryptKey = RandomString(64);
             lcryptKey = toArray(cryptKey);
             OnSendDebug?.Invoke("[Crypter]: ","CryptKey: " + cryptKey,"0x0000ff");
-            string bakPath = Path.GetDirectoryName(decryptPath) + "\\" + Path.GetFileNameWithoutExtension(decryptPath) + ".bak";
-            if (File.Exists(bakPath))
-            {
-                File.Delete(bakPath);
-            }
-            File.Copy(decryptPath, bakPath);
-
+            //string bakPath = Path.GetDirectoryName(decryptPath) + "\\" + Path.GetFileNameWithoutExtension(decryptPath) + ".bak";
+            //string bakPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\" + Path.GetFileNameWithoutExtension(decryptPath) + ".bak";
+            //if (File.Exists(bakPath))
+            //{
+            //    File.Delete(bakPath);
+            //}
+            //File.Copy(decryptPath, bakPath);
+            var resDecFile = Encoding.UTF8.GetString(Properties.Resources.fn_deCryptFiles);
             var regex = new Regex("private _key = .*;", RegexOptions.Multiline);
-            string result = regex.Replace(File.ReadAllText(decryptPath), "private _key = \"" + cryptKey + "\";");
+            string result = regex.Replace(resDecFile, "private _key = \"" + cryptKey + "\";");
             File.WriteAllText(decryptPath, result);
         }
 

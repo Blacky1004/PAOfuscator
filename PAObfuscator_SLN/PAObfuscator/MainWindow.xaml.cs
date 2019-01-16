@@ -31,6 +31,8 @@ namespace PAObfuscator
         private Obfuscator obfuscator = null;
         private Crypt crypt = null;
         private readonly string _appVersion;
+        private readonly string _appTempPath;
+
         public MainWindow()
         {
             var thisVersion = Assembly.GetExecutingAssembly().Location;
@@ -38,30 +40,37 @@ namespace PAObfuscator
             _appVersion = fvi.FileVersion;
             InitializeComponent();
             this.DataContext = viewModel;
+            _appTempPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".PAObfuscator");
         }
 
         private void MetroWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            if (!config.Init())
-            {
-               
-            }
+            config.Init();
 
             viewModel.AppVersion = _appVersion;
             viewModel.ExportFolder = config.ExportFolder;
             viewModel.MissionFolder = config.MissionFolder;
             viewModel.MakePboFolder = config.MakePboFolder;
-
-            obfuscator = new Obfuscator(viewModel.MissionFolder);
-            obfuscator.OnSendDebug += Obfuscator_OnSendDebug;
+            rtbDebug.AppendText("[System]: Anwendung gestartet. Version: " + _appVersion + Environment.NewLine);
+            if (String.IsNullOrEmpty(viewModel.MissionFolder))
+            {
+                btnObfuscate.IsEnabled = false;
+                rtbDebug.AppendText("Bitte Missionsordner auswählen!");
+            }
             
-            rtbDebug.AppendText("[System]: Anwendung gestartet. Version: "+_appVersion);
 
         }
 
         private void Obfuscator_OnSendDebug(string caller, string message, string color = "0x000000")
         {
-            rtbDebug.AppendText(DateTime.Now.ToString("hh:mm:ss") + " - [" + caller + "]: " + message + Environment.NewLine); rtbDebug.ScrollToEnd();
+            this.Dispatcher.Invoke(new Action<TextBox>(
+                rtbDebug =>
+                {
+                    rtbDebug.AppendText(DateTime.Now.ToString("hh:mm:ss") + " - [" + caller + "]: " + message + Environment.NewLine);
+                    rtbDebug.ScrollToEnd();
+                }
+                ), this.rtbDebug);
+            
         }
 
         private void FolderSelect(object sender, RoutedEventArgs e)
@@ -76,6 +85,7 @@ namespace PAObfuscator
                     case "btnsetmission":
                         {
                             viewModel.MissionFolder = dlg.SelectedPath;
+                            btnObfuscate.IsEnabled = true;
                         }break;
                     case "btnsetexport":
                         {
@@ -94,85 +104,96 @@ namespace PAObfuscator
 
         private void btnObfuscate_Click(object sender, RoutedEventArgs e)
         {
-            obfuscator.Obfuscate(Directory.GetFiles(viewModel.MissionFolder, "*", SearchOption.AllDirectories));
-            rtbDebug.AppendText("[System]: Obfuscator abgeschlossen");
-
-            string cryptWorkPath = System.IO.Path.Combine(config.AppPath, "AntiHack");
-            crypt = new Crypt(cryptWorkPath);
-            crypt.OnSendDebug += Obfuscator_OnSendDebug;
-            StreamReader cfgReader = new StreamReader(viewModel.MissionFolder + "\\description.ext");
-            StreamWriter cfgWriter = new StreamWriter(obfuscator.obfuPath + "\\config\\cfgpa_crypt.hpp");
-            cfgWriter.WriteLine("class ParadiseCryptSys {");
-            string line;
-            string tag = "";
-            string fileP = "";
-            string crntClass = "";
-            while ((line = cfgReader.ReadLine()) != null)
+            btnObfuscate.IsEnabled = false;
+            bool isWorking = false;
+            new Thread(new ThreadStart(() =>
             {
-                bool containsClass = Regex.Match(line.ToLower(), "(\\s)?class").Success;
-                bool containsTag = Regex.Match(line.ToLower(), "tag\\s?=\\s?\\\"").Success;
-                bool containsPath = Regex.Match(line.ToLower(), "file\\s?=\\s?\\\"").Success;
-                bool containsEnd = Regex.Match(line.ToLower(), ".*};-*").Success;
+                obfuscator = new Obfuscator(viewModel.MissionFolder);
+                obfuscator.OnSendDebug += Obfuscator_OnSendDebug;
+                obfuscator.Obfuscate(Directory.GetFiles(viewModel.MissionFolder, "*", SearchOption.AllDirectories));
+                Obfuscator_OnSendDebug("Obfuscator", "Obfuscator abgeschlossen");
+                //rtbDebug.AppendText("[System]: Obfuscator abgeschlossen");
 
-                if (tag != "" && fileP != "" && containsClass)
+                string cryptWorkPath = System.IO.Path.Combine(config.AppPath, "AntiHack");
+                crypt = new Crypt(_appTempPath);
+                crypt.OnSendDebug += Obfuscator_OnSendDebug;
+                StreamReader cfgReader = new StreamReader(viewModel.MissionFolder + "\\description.ext");
+                StreamWriter cfgWriter = new StreamWriter(obfuscator.obfuPath + "\\config\\cfgpa_crypt.hpp");
+                cfgWriter.WriteLine("class ParadiseCryptSys {");
+                string line;
+                string tag = "";
+                string fileP = "";
+                string crntClass = "";
+                while ((line = cfgReader.ReadLine()) != null)
                 {
-                    var regex = new Regex("\\s.*class\\s?|\\s?{};\\s?", RegexOptions.Multiline);
-                    crntClass = regex.Replace(line, "");
-                    if (crntClass.ToLower().Contains("preinit"))
+                    bool containsClass = Regex.Match(line.ToLower(), "(\\s)?class").Success;
+                    bool containsTag = Regex.Match(line.ToLower(), "tag\\s?=\\s?\\\"").Success;
+                    bool containsPath = Regex.Match(line.ToLower(), "file\\s?=\\s?\\\"").Success;
+                    bool containsEnd = Regex.Match(line.ToLower(), ".*};-*").Success;
+
+                    if (tag != "" && fileP != "" && containsClass)
                     {
+                        var regex = new Regex("\\s.*class\\s?|\\s?{};\\s?", RegexOptions.Multiline);
+                        crntClass = regex.Replace(line, "");
+                        if (crntClass.ToLower().Contains("preinit"))
+                        {
+                            continue;
+                        }
+
+                        try
+                        {
+                            Obfuscator_OnSendDebug("System", obfuscator.obfuPath + "\\" + fileP + "\\fn_" + crntClass + ".sqf" + " wird versucht umzuwandeln.");
+                            cfgWriter.WriteLine("\tclass " + crntClass + " {");
+                            cfgWriter.WriteLine("\t\ttag = \"" + tag + "\";\n\t\tcrypted = \"" + fileP + "\\" + crypt.cryptSqf(obfuscator.obfuPath + "\\" + fileP + "\\fn_" + crntClass + ".sqf") + "\";");
+                            cfgWriter.WriteLine("\t};");
+                            Obfuscator_OnSendDebug("System", obfuscator.obfuPath + "\\" + fileP + "\\fn_" + crntClass + ".sqf" + " wurde umgewandelt.");
+                            continue;
+                        }
+                        catch (Exception ex)
+                        {
+                            Obfuscator_OnSendDebug("System", ex.Message);
+                            return;
+                        }
+                    }
+
+                    if (containsTag)
+                    {
+                        var regex = new Regex(".*tag\\s?=\\s\"|\\\";\\s?", RegexOptions.Multiline);
+                        tag = regex.Replace(line, "");
                         continue;
                     }
 
-                    try
+                    if (containsPath)
                     {
-                        rtbDebug.AppendText("[System]: " + obfuscator.obfuPath + "\\" + fileP + "\\fn_" + crntClass + ".sqf" + " wird versucht umzuwandeln.");
-                        cfgWriter.WriteLine("\tclass " + crntClass + " {");
-                        cfgWriter.WriteLine("\t\ttag = \"" + tag + "\";\n\t\tcrypted = \"" + fileP + "\\" + crypt.cryptSqf(obfuscator.obfuPath + "\\" + fileP + "\\fn_" + crntClass + ".sqf") + "\";");
-                        cfgWriter.WriteLine("\t};");
-                        rtbDebug.AppendText("[System]: " + obfuscator.obfuPath + "\\" + fileP + "\\fn_" + crntClass + ".sqf" + " wurde umgewandelt.");
+                        var regex = new Regex(".*file\\s?=\\s\"|\\\";\\s?", RegexOptions.Multiline);
+                        fileP = regex.Replace(line, "");
                         continue;
                     }
-                    catch (Exception ex)
+
+                    if (containsEnd)
                     {
-                        rtbDebug.AppendText("[System]: " + ex.Message);
-                        return;
+                        if (fileP != "")
+                        {
+                            fileP = "";
+                            continue;
+                        }
+                        tag = "";
                     }
+
+                    cfgWriter.WriteLine("};");
+                    cfgWriter.Close();
+                    cfgReader.Close();
+
+                    StreamWriter fncWriter = new StreamWriter(obfuscator.obfuPath + "description.ext");
+                    fncWriter.WriteLine("#include \"config\\cfgpa_crypt.hpp\"");
+                    fncWriter.WriteLine("class CfgFunctions {\n\tclass Life_Client_Core {\n\t\ttag = \"life\";\n\t\tclass Functions {\n\t\t\tfile = \"core\\functions\";\n\t\t\tclass deCrypt {preInit = 1;};\n\t\t};\n\t};\n};");
+                    fncWriter.Close();
+
                 }
 
-                if (containsTag)
-                {
-                    var regex = new Regex(".*tag\\s?=\\s\"|\\\";\\s?", RegexOptions.Multiline);
-                    tag = regex.Replace(line, "");
-                    continue;
-                }
-
-                if (containsPath)
-                {
-                    var regex = new Regex(".*file\\s?=\\s\"|\\\";\\s?", RegexOptions.Multiline);
-                    fileP = regex.Replace(line, "");
-                    continue;
-                }
-
-                if (containsEnd)
-                {
-                    if (fileP != "")
-                    {
-                        fileP = "";
-                        continue;
-                    }
-                    tag = "";
-                }
-
-                cfgWriter.WriteLine("};");
-                cfgWriter.Close();
-                cfgReader.Close();
-
-                StreamWriter fncWriter = new StreamWriter(obfuscator.obfuPath + "description.ext");
-                fncWriter.WriteLine("#include \"config\\cfgpa_crypt.hpp\"");
-                fncWriter.WriteLine("class CfgFunctions {\n\tclass Life_Client_Core {\n\t\ttag = \"life\";\n\t\tclass Functions {\n\t\t\tfile = \"core\\functions\";\n\t\t\tclass deCrypt {preInit = 1;};\n\t\t};\n\t};\n};");
-                fncWriter.Close();
-
-            }
+            })).Start();
+            while (isWorking) Thread.Sleep(10);
+            btnObfuscate.IsEnabled = true;
         }
     }
 
